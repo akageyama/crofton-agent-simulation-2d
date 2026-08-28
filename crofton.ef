@@ -1,0 +1,41 @@
+module crofton_m
+  use constants_m
+  implicit none
+  private
+  public :: CROFTONS__NUM_TOTAL
+
+  integer <const> :: NUM_DIRECTION_DISTANCE = 10
+  integer <const> :: NUM_DIRECTION_ANGLE    = 10
+  integer <const> :: CROFTONS__NUM_TOTAL         &
+                       = NUM_DIRECTION_DISTANCE  &
+                       * NUM_DIRECTION_ANGLE
+
+  type, public :: crofton_world_line_t
+    real(DR) :: distance_from_origin_of_spacetime
+    real(DR) :: angle
+  end type crofton_world_line_t
+
+  type, public :: crofton_position_in_spacetime_t
+    real(DR) :: x, t
+  end type crofton_position_in_spacetime_t
+
+  type, public :: crofton_t
+    type(crofton_world_line_t) :: world_line
+    type(crofton_position_in_spacetime_t) :: position_in_spacetime
+    logical :: in_simulation_region
+    integer :: threashold_crossing_counter
+  contains
+    procedure :: initialize => crofton__initialize
+  end type crofton_t
+
+  type(crofton_t), dimension(CROFTONS__NUM) :: croftons
+
+contains
+
+  subroutine crofton__initialize
+    integer :: n
+
+    do n = 1, CROFTONS__NUM
+  end subroutine crofton__initialize
+end module crofton_m
+
