@@ -1,0 +1,51 @@
+module worldline_m
+  use constants_m
+  implicit none
+  private
+
+  type, public :: worldline_t
+    real(DR) :: dist
+    real(DR) :: phi
+    real(DR) :: cos_phi, cos_phi_reciprocal
+    real(DR) :: sin_phi, sin_phi_reciprocal
+    real(DR) :: tan_phi, tan_phi_reciprocal
+    logical :: in_simulation_region
+    integer :: threashold_crossing_counter
+  contains
+    procedure :: get_pos_x => worldline__get_pos_x
+    procedure :: initialize => worldline__initialize
+  end type worldline_t
+
+
+contains
+
+
+  function worldline__get_pos_x( worldline, t ) result(x) 
+    class(worldline_t) <in> :: worldline
+    real(DR) <in> :: t
+    real(DR) :: x
+
+    !!>
+         cos_phi * x + sin_phi * t = dist
+                       cos_phi * x = dist - sin_phi * t
+                                 x = dist / cosphi - tan_phi * t
+
+    !!<
+    associate( dist => worldline.distance_from_origin_of_spacetime,  &
+                phi => worldline.angle_from_x_axis )
+
+    x = worldline.
+
+    end associate
+  end function worldline__get_pos_x
+
+  subroutine worldline__initialize( worldline )
+    class(worldline_t) <out> :: worldline
+
+
+    worldline.
+    
+
+  end subroutine worldline__initialize
+end module worldline_m
+

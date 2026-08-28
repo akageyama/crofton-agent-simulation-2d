@@ -1,0 +1,356 @@
+!!>
+    timer.f90
+      2013.06.05: This comes from my old timer.f90.
+      2013.08.04: Removed timer__start and __end.
+      2013.08.04: TM_STT & _END be public.
+      2017.07.03: use mpi. print by only rank 0.
+      2017.07.09: Merged the bugfix by T. Furuzono.
+
+    timer.e03
+      2017.07.09: Use efpp.sh macros.
+
+    kutimer.e03
+      2017.07.17: This is kutimer.e03. Renamed from timer.e03.
+
+    kutiemr.ef
+      2022.07.12: This was kutimer.e03. -kage. T
+      2022.07.12: Introduce using_mpi.
+
+    clock.ef
+      2023.11.16: Rename kutimer -> clock
+      2023.11.16: Rewrite tm1 etc to Clock.start etc.
+
+!!<
+
+module clock_m
+  use constants_m
+  use mpi
+  use parallel_m
+  implicit none
+  private
+
+  integer <const> :: MAX_KEY_N    = 50
+  integer <const> :: MAX_SUBKEY_N = 100
+  integer <const> :: KEYLEN       = 6
+
+  integer(DI) :: System_clock_count_max
+  integer(DI), save :: Job_start_time, Job_end_time
+  integer(DI), save :: Main_loop_counter = 0_DI
+  char(len=19), save :: Dateandtime_start, Dateandtime_end
+
+  type ttb_t
+    integer(DI) :: stt_tim, total_tim, call_cntr, sub_last_tim
+    char(len=KEYLEN) :: keyname
+    integer(DI), dimension(MAX_KEY_N) :: sub_total_tim
+    char(len=KEYLEN), dimension(MAX_SUBKEY_N) :: sub_keyname
+    integer :: sub_key_n   ! Number of lap points
+    logical :: pair_check  ! (stt,end) must be a pair.
+  end type ttb_t
+
+  type(ttb_t), dimension(MAX_KEY_N), save :: ttb = & 
+    ttb_t(0,0,0,0,'123456',0,'******',0, .true. )      ! Initialization
+
+  integer :: Key_n                                   ! How many key used
+
+  logical :: Jump_flag = .false.   ! Jump all timer routines if this is set.
+
+  type, public :: clock_t
+  contains
+    procedure, nopass :: count => clock__count
+    procedure, nopass ::   lap => clock__lap
+    procedure, nopass :: print => clock__print
+    procedure, nopass :: start => clock__start
+    procedure, nopass ::  stop => clock__stop
+  end type clock_t
+
+  type(clock_t) ,public :: Clock
+
+
+contains
+
+
+  function get_dateandtime()
+    char(len=19) :: get_dateandtime
+    char(len= 8) :: date
+    char(len=10) :: time
+    call date_and_time(date=date,time=time)
+    get_dateandtime = date(1:4)//'.'//date(5:6)//'.'//date(7:8)//'-'&
+                   &//time(1:2)//':'//time(3:4)//':'//time(5:6)
+  end function get_dateandtime
+
+
+  function get_index( key )
+    !!>
+        char string name (key)-->index integer
+        Returns 0 when it is new.
+    !!<
+    char(len=KEYLEN) <in> :: key
+    integer :: i, get_index
+
+    get_index = 0
+
+    do i = 1, Key_n
+      if ( ttb(i).keyname == key ) then
+        get_index = i
+        return
+      end if
+    end do
+  end function get_index
+
+
+  function get_subindex( i, subkey )
+    !!>
+        char string name (subkey)-->index integer
+        Returns 0 when new.
+    !!<
+    integer <in> :: i
+    char(len=KEYLEN) <in> :: subkey
+    integer :: j, get_subindex
+
+    get_subindex = 0
+
+    do j = 1, ttb(i).sub_key_n
+      if( ttb(i).sub_keyname(j) == subkey ) then
+        get_subindex = j
+        return
+      end if
+    end do
+  end function get_subindex
+
+
+  subroutine printer
+    !!>
+        Print out the timer results in formatted lines.
+    !!<
+    integer :: i, j, k
+    integer(DI) :: dummy, tick, ctmp
+    integer(DI) :: ttl     ! total clock count
+    integer(DI) :: sbttl   ! subtotal clock count
+    real :: ts             ! total seconds
+    integer :: h,m,s       ! hour, minute, second
+
+    if ( Jump_flag ) return                         ! Error happend before.
+
+    call system_clock(dummy, tick)
+
+    Dateandtime_end = get_dateandtime()
+
+    !!>
+         **************************************************
+                CPU Time Table.    total key =14
+           2023.11.16-16:01:18 --> 2023.11.16-16:06:37
+         **************************************************
+    !!<
+    print '(50a1)', ('*',i=1,50)                    ! Horizontal line
+    print '(7x,a30,i2)',"CPU Time Table.    total key =", Key_n
+    print '(2x,a19," --> ",a19)', Dateandtime_start, Dateandtime_end
+    print '(50a1)', ('*',i=1,50)                    ! Horizontal line
+
+    do i = 1, Key_n
+      ! print *,'[clock] i = ', i, ttb(i).keyname
+      ttl = ttb(i).total_tim
+      print '(/8x,a5,a6,a5,1x,i9,a8)',                      & ! Title
+                        "///  ",ttb(i).keyname,"  ///",     &
+                                ttb(i).call_cntr," call"
+      if( .not. ttb(i).pair_check ) then
+        print *," __MODLINE__: tag did not paired." 
+        cycle                                ! Ignore this.
+      end if
+
+
+      !!>
+                  ///  main    ///         1    call
+            ----------------------------------------
+             para i :      0.000 sec   (  0.000 %)
+             consts :      0.000 sec   (  0.000 %)
+                             . 
+                             . 
+                             . 
+            ----------------------------------------
+             TOTAL  :    321.955 sec   [00h05m21s]
+            ----------------------------------------
+          
+                  ///  subfld  ///     20001    call
+            ----------------------------------------
+             vel&tm :      0.098 sec   (  0.182 %)
+             div  v :      8.365 sec   ( 15.532 %)
+                             .
+                             .
+                             .
+            ----------------------------------------
+             TOTAL  :     53.858 sec   [00h00m53s]
+            ----------------------------------------
+      !!<
+
+
+      print '(2x,40a1)', ('-',k=1,40)        ! Horizontal line
+
+      do j = 1, ttb(i).sub_key_n             ! Sub procedure loop
+        sbttl = ttb(i).sub_total_tim(j)      ! Subtotal tick number
+        print '(3x,a6,a3,f10.3,a4,3x,a1,f7.3,a3)',             &
+                       ttb(i).sub_keyname(j)," : ",            &
+                       real(sbttl,DR)/real(tick,DR)," sec",    &
+                    "(",real(sbttl,DR)/real(ttl,DR)*100," %)"
+      end do
+
+      print '(2x,40a1)', ('-',k=1,40)        ! Horizontal line
+
+      ts = real(ttl,DR) / real(tick,DR)      ! Make it second
+      h = int(ts) / 3600                     ! Hour
+      m = mod(int(ts),3600) / 60             ! Minute
+      s = int(ts)-h*3600-m*60                ! Second
+      print '(3x,a9,f10.3,a4,3x,a1,3(i2.2,a1),a1)',           &
+                       "TOTAL  : ",ts," sec",                 &
+                       "[",h,"h",m,"m",s,"s","]"
+      print '(2x,40a1)', ('-',k=1,40)        ! Horizontal line
+    end do
+
+
+    
+    !!>
+        **************************************************
+                    TOTAL LOOP =         5000
+                        1 STEP :      0.06439 sec
+        **************************************************
+    !!<
+    call system_clock( Job_end_time )
+
+    print '(/50a1)', ('*',i=1,50)            ! Horizontal line
+    print '(3x,"         TOTAL LOOP = ",i12)', Main_loop_counter
+
+    ctmp = Job_end_time - Job_start_time  ! Special care for a very 
+
+    do while ( ctmp < 0_DI )          ! This part was
+      ctmp += System_clock_count_max  ! revised by
+    end do                            ! Takuya Furuzono.
+
+    print '(3x,"             1 STEP : ",f12.5," sec")', &
+                   real(ctmp,DR) / real(tick,DR) / Main_loop_counter
+    print '(50a1)', ('*',i=1,50)            ! Horizontal line
+  end subroutine printer
+
+
+  subroutine clock__start( key_ )
+    char(len=KEYLEN) <in> :: key_
+
+    integer(DI) :: c
+    integer :: i
+    char(len=KEYLEN):: key
+    logical :: just_once = .true.
+
+    ===<just_once>===
+      call system_clock( Job_start_time,  &
+                         count_max=System_clock_count_max ) 
+      Dateandtime_start = get_dateandtime()
+    ===</just_once>===
+
+    if( Jump_flag ) return                    ! Error happend before.
+
+    call system_clock(c)                      ! Get the clock counter.
+
+    key = adjustl(key_)
+    i = get_index( key )
+
+    if ( i == 0 ) then
+      i = Key_n + 1                           ! Call is OK, but too much.
+      if ( i > MAX_KEY_N ) then               ! Too many keys?
+        print *, "__MODLINE__: Increase MAX_KEY_N."
+        Jump_flag = .true.                    ! Error flag on.
+        return
+      end if
+      Key_n = i
+      ttb(i).keyname = key
+    end if
+
+    ttb(i).call_cntr += 1
+    ttb(i).stt_tim = c
+    ttb(i).sub_last_tim = c
+    ttb(i).pair_check = .false.
+  end subroutine clock__start
+
+
+  subroutine clock__stop( key_ )
+    char(len=KEYLEN) <in> :: key_
+
+    integer(DI) :: c, ctmp
+    integer :: i
+    char(len=KEYLEN):: key
+
+    if( Jump_flag ) return                    ! Error happend before.
+
+    call system_clock(c)                      ! Get the clock counter.
+
+    key = adjustl(key_)
+    i = get_index( key )
+
+    if ( i == 0 ) then
+      print *, "__MODLINE__: stop called before start. key = ",key
+      Jump_flag = .true.                      ! Ignore this error.
+      return
+    end if
+
+    ctmp = c - ttb(i).stt_tim
+
+    do while ( ctmp < 0_DI )          ! This part was
+      ctmp += System_clock_count_max  ! revised by
+    end do                            ! Takuya Furuzono.
+
+    ttb(i).total_tim += ctmp
+    ttb(i).pair_check = .true.
+  end subroutine clock__stop
+
+
+  subroutine clock__lap( key_, subkey_ )
+    char(len=KEYLEN) <in> :: key_, subkey_
+    integer :: i,j
+    integer(DI) :: c, ctmp
+    char(len=KEYLEN) :: key, subkey
+
+    if (Jump_flag) return               ! Error happend before.
+    call system_clock(c)                ! Get the clock counter.
+    key = adjustl(key_)
+    subkey = adjustl(subkey_)
+    i = get_index(key)
+    if( i == 0 ) then                   ! Forgot to call start before.
+      print *, '__MODLINE__: No key for key=', key,     &
+                                  ' subkey= ',subkey
+      Jump_flag = .true.                ! Error flag on.
+      return
+    end if
+    j = get_subindex( i, subkey )
+    if ( j == 0 ) then
+      j = ttb(i).sub_key_n + 1
+      if ( j > MAX_SUBKEY_N ) then
+        print *,"__MODLINE__: Increase MAX_SUBKEY_N. key = ", key
+        Jump_flag = .true.              ! Error flag on.
+        return
+      end if
+      ttb(i).sub_key_n = j
+      ttb(i).sub_keyname(j) = subkey
+    end if
+
+    ctmp = c - ttb(i).sub_last_tim
+
+    do while ( ctmp < 0_DI )          ! This part was
+      ctmp += System_clock_count_max  ! revised by
+    end do                            ! Takuya Furuzono.
+
+    ttb(i).sub_total_tim(j) += ctmp
+
+    call system_clock(c)
+    ttb(i).sub_last_tim = c
+  end subroutine clock__lap
+
+
+  subroutine clock__count
+    Main_loop_counter += 1_DI
+  end subroutine clock__count
+
+
+  subroutine clock__print
+    if ( Parallel.rank.me == 0 ) then
+      call printer
+    end if
+  end subroutine clock__print
+
+end module clock_m

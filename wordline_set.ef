@@ -1,0 +1,18 @@
+module worldline_set_m
+  use constants_m
+  use worldline_m
+  implicit none
+
+  public :: WORLDLINE_SET__NLINES
+
+  integer <const> :: NUM_DIRECTION_DISTANCE = 10
+  integer <const> :: NUM_DIRECTION_ANGLE    = 10
+  integer <const> :: WORLDLINE_SET__NLINES = NUM_DIRECTION_DISTANCE  &
+                                           * NUM_DIRECTION_ANGLE
+
+
+contains
+
+  subroutine worldline_set__update
+  end subroutine worldline_set__update
+end module worldline_set_m

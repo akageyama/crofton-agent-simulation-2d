@@ -1,0 +1,35 @@
+program main
+  use clock_m
+  use constants_m
+  use ut_m
+  implicit none
+
+  integer :: loop_max = 10000
+
+                                          !{main  }{{STT}}
+  call iPrint                             !{main  }{iprint}
+
+  do loop = 1, loop_max                   !{{count}}
+    call croftons.update                  !{main  }{mhd up}
+  end do
+
+  call iPrint                             !{main  }{iprint}
+                                          !{main  }{{END}}
+                                          !{{print}}
+
+contains
+
+  subroutine iPrint
+    logical :: in_the_beginning = .true.
+
+    if ( in_the_beginning ) then
+      call ut__message_leader( "Job starts on", ut__date_and_time() )
+      call constants__print
+      in_the_beginning = .false.
+    else ! in the end of the simulation
+      call ut__deco_message( '#', trim(Job.last_message) )
+      call ut__message_leader( "Job ends on", ut__date_and_time() )
+    end if
+  end subroutine iPrint
+
+end program main
