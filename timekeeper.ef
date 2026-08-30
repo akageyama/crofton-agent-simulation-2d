@@ -1,0 +1,26 @@
+module timekeeper_m
+  use constants_m
+  implicit none
+  private
+  public :: Timekeeper
+
+  type, public :: timekeeper_t
+    real(DR) :: t
+    integer :: nstep
+  contains
+    procedure :: initialize => timekeeper__initialize
+  end type timekeeper_t
+
+  type(timekeeper_t) :: Timekeeper
+
+contains
+
+  subroutine timekeeper__initialize( timekeeper )
+    class(timekeeper_t) <out> :: timekeeper
+
+    timekeeper.t     = 0.0_DR
+    timekeeper.nstep = 0
+  end subroutine timekeeper__initialize
+
+end module timekeeper_m
+

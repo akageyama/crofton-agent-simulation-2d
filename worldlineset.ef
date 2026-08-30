@@ -1,0 +1,51 @@
+module worldlineset_m
+  use constants_m
+  use worldline_m
+  implicit none
+  public :: Worldlineset
+
+  real(DR) :: TIME_SPAN_BEGIN = 0.0_DR
+  real(DR) :: TIME_SPAN_END   = 2.0_DR
+  real(DR) :: TIME_SPAN_CENTER = ( TIME_SPAN_BEGIN + TIME_SPAN_END ) / 2
+  real(DR) :: DIST_MAX = 2.0_DR
+  integer <const> :: NDIV_DIST  = 10
+  integer <const> :: NDIV_ANGLE = 10
+  integer <const> :: WORLDLINESET_NLINES = NDIV_DIST * NDIV_ANGLE
+
+  type(worldline_t), dimension(WORLDLINESET_NLINES) :: Worldlineset
+
+contains
+
+
+  subroutine worldlineset__initialize
+    integer  :: i, j, counter
+    real(DR) :: phi0 = PI/3
+    real(DR) :: d_phi  = TWOPI / NDIV_ANGLE
+    real(DR) :: d_dist = DIST_MAX / NDIV_DIST
+
+    !!>
+         For NDIV_DIST = 4
+                   .<--------------- dist = DIST_MAX
+                  * i=4
+                 .
+                * i=3
+               .
+              * i=2
+             .
+            * i=1
+           +<--------------- dist = 0
+    !!<
+
+    counter = 1
+    do j = 1, NDIV_ANGLE
+      phi = phi0 + d_phi*(j-1)
+      do i = 1, NDIV_DIST
+        dist = d_dist*(i-0.5_DR)
+        !debugp counter, phi, dist
+        call Worldlineset(counter).initialize( phi, dist, TIME_SPAN_CENTER )
+        counter += 1
+      end do
+    end do
+  end subroutine worldlineset__initialize
+
+end module worldlineset_m

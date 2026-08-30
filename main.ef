@@ -1,17 +1,23 @@
 program main
   use clock_m
   use constants_m
+  use timekeeper_m
+  use field_m
+  use worldline_m
+  use worldlineset_m
   use ut_m
   implicit none
 
   integer :: loop_max = 10000
 
                                           !{main  }{{STT}}
+  call Timekeeper.initialize              !{main  }{time i}
+  call worldlineset__initialize           !{main  }{wlns s}
   call iPrint                             !{main  }{iprint}
 
-  do loop = 1, loop_max                   !{{count}}
-    call croftons.update                  !{main  }{mhd up}
-  end do
+! do loop = 1, loop_max                   !{{count}}
+!   call croftons.update                  !{main  }{mhd up}
+! end do
 
   call iPrint                             !{main  }{iprint}
                                           !{main  }{{END}}

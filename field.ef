@@ -1,0 +1,33 @@
+module field_m
+  use constants_m
+  use timekeeper_m
+  implicit none
+  private
+  public :: field__get_interpolated_value
+
+
+contains
+
+
+  function field__get_interpolated_value( x, timespan_center ) result(value)
+    real(DR) <in> :: x
+
+    real(DR) :: xsq, t_minus_tc, t_minus_tc_sq
+    real(DR) <param> :: A = 0.8_DR
+    real(DR) <param> :: ASQ = A*A
+    real(DR) <param> :: B = 0.2_DR
+    real(DR) <param> :: BSQ = B*B
+
+    xsq = x*x
+    t_minus_tc = Timekeeper.t - timespan_center
+    t_minus_tc_sq = t_minus_tc * t_minus_tc
+
+    !!>
+         field(x,t) = x^2 /A^2 + (t-t_c)^2 / B^2 -1
+    !!<
+
+    value = xsq / ASQ + t_minus_tc_sq / BSQ - 1.0_DR
+  end function field__get_interpolated_value
+
+end module field_m
+

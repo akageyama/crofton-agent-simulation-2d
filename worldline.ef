@@ -1,51 +1,159 @@
 module worldline_m
   use constants_m
+  use timekeeper_m
+  use field_m
   implicit none
   private
 
+  type, public :: worldline_sensor_t
+    real(DR) :: value_prev
+    integer  :: counter
+    logical  :: sleeping
+  contains
+    procedure :: initialize => worldline_sensor__initialize
+    procedure :: update => worldline_sensor__update
+  end type worldline_sensor_t
+
   type, public :: worldline_t
+    real(DR) :: timespan_center
     real(DR) :: dist
     real(DR) :: phi
     real(DR) :: cos_phi, cos_phi_reciprocal
-    real(DR) :: sin_phi, sin_phi_reciprocal
-    real(DR) :: tan_phi, tan_phi_reciprocal
-    logical :: in_simulation_region
-    integer :: threashold_crossing_counter
+    real(DR) :: sin_phi
+    real(DR) :: tan_phi
+    real(DR) :: timespan_center
+    real(DR) :: x_0, v_x
+    logical :: alive
+    type(worldline_sensor_t) :: sensor
   contains
-    procedure :: get_pos_x => worldline__get_pos_x
+    procedure :: get_current_pos_x => worldline__get_current_pos_x
     procedure :: initialize => worldline__initialize
+    procedure :: update => worldline__update
   end type worldline_t
 
 
 contains
 
 
-  function worldline__get_pos_x( worldline, t ) result(x) 
+  subroutine worldline_sensor__initialize( sensor )
+    class(worldline_sensor_t) <out> :: sensor 
+    
+    sensor.value_prev = NAN
+    sensor.counter    = 0
+    sensor.sleeping   = .true.
+  end subroutine worldline_sensor__initialize
+
+
+  subroutine worldline_sensor__update( sensor, value_new )
+    class(worldline_sensor_t) <io> :: sensor
+    real(DR) <in> :: value_new
+
+    if ( sensor.sleeping ) then
+      sensor.sleeping = .false.
+      sensor.value_prev = value_new
+      return
+    end if
+
+    if ( value_new * sensor.value_prev < 0.0_DR ) then
+      ! change sign
+      sensor.counter += 1
+    end if
+
+    sensor.value_prev = value_new
+  end subroutine worldline_sensor__update
+
+
+  subroutine worldline__update( worldline )
+    class(worldline_t) <io> :: worldline
+
+    real(DR) :: pos_x
+    real(DR) :: value
+
+    pos_x = worldline.get_current_pos_x()
+
+    if ( pos_x >= SIMULATION_REGION.xmin .and. &
+         pos_x <= SIMULATION_REGION.xmax ) then
+      value = field__get_interpolated_value( pos_x, worldline.timespan_center )
+      call worldline.sensor.update( value )
+    end if
+  end subroutine worldline__update
+
+
+  function worldline__get_current_pos_x( worldline ) result(pos_x) 
     class(worldline_t) <in> :: worldline
-    real(DR) <in> :: t
-    real(DR) :: x
+    real(DR) :: pos_x
 
     !!>
-         cos_phi * x + sin_phi * t = dist
-                       cos_phi * x = dist - sin_phi * t
-                                 x = dist / cosphi - tan_phi * t
+                  t
+            .     |
+                . |   
+      t=t_max - - - .- - - - - - - - - - - - 
+                  |  /  .
+                  | d      .     
+                  |/ phi       .
+      t=t_c - - - + - - - - - - - -. - - - -
+          enter   |                |   .
+                  |                |       . worldline
+                  |                |           .
+      t=0   ------+----------------+----------------> x
+                  |                x0
+                 x=0
+   
+        Because the two lines are perpendicular,
+          ((x,t) - (dist*cosphi,t_c+dist*sinphi)) .dot. (cosphi,sinphi) = 0
+        Therefore,
+                    (x-dist*cosphi)*cosphi + (t-t_c-dist*sinphi)*sinphi = 0
+        or,
+              x*cosphi - dist*cosphi^2 + (t-t_c)*sinphi - dist*sinphi^2 = 0
+        So, the world line equation is
+                     x*cosphi + (t-t_c)*sinphi = dist
+
+
+        Rrom this, we get position x at time t as
+            cos_phi * x = dist - sin_phi * (t-t_c)
+                      x = dist / cosphi - tan_phi * (t-t_c)
+                      x = x_0 + vx * (t-t_c)
+
+                          x_0 = dist / cosphi
+                          v_x = -tan_phi
 
     !!<
-    associate( dist => worldline.distance_from_origin_of_spacetime,  &
-                phi => worldline.angle_from_x_axis )
 
-    x = worldline.
+    pos_x = worldline.x_0  &
+          + worldline.v_x * (Timekeeper.t-worldline.timespan_center)
+  end function worldline__get_current_pos_x
 
-    end associate
-  end function worldline__get_pos_x
 
-  subroutine worldline__initialize( worldline )
+  subroutine worldline__initialize( worldline, phi, dist, timespan_center )
     class(worldline_t) <out> :: worldline
-
-
-    worldline.
+    real(DR) <in> :: phi, dist, timespan_center
     
+    real(DR) <param> :: TINY = 1.e-6_DR
 
+    real(DR) :: sin_phi
+    real(DR) :: cos_phi, cos_phi_reciprocal
+    real(DR) :: tan_phi
+
+    call worldline.sensor.initialize
+
+    worldline.dist        = dist
+    worldline.phi         = phi
+    worldline.timespan_center = timespan_center
+
+    worldline.cos_phi = cos(phi)
+    worldline.sin_phi = sin(phi)
+
+    if ( abs(cos_phi)) >= TINY ) then
+      worldline.tan_phi = tan(phi)
+      worldline.cos_phi_reciprocal = 1.0_DR / cos(phi)
+      worldline.v_x = -tan(phi)
+      worldline.x_0 = dist / cos_phi
+      worldline.alive = .true.
+    else
+      worldline.alive = .false.
+      return
+    end if
   end subroutine worldline__initialize
+
 end module worldline_m
 
