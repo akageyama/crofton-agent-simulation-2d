@@ -30,7 +30,7 @@ contains
   subroutine timekeeper__initialize( timekeeper )
     class(timekeeper_t) <out> :: timekeeper
 
-    timekeeper.dt = 1.e-4_DR
+    timekeeper.dt = 1.e-3_DR
     timekeeper.t  = 0.0_DR
   end subroutine timekeeper__initialize
 

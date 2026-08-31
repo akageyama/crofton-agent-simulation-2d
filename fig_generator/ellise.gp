@@ -1,12 +1,12 @@
 # gnuplot
 
-a = 1.0
-b = 0.5
+a = 0.5
+b = 0.25
 
 set parametric
 
 set size ratio -1
-set xrange [-2.0:2.0]
+set xrange [-1.0:1.0]
 set yrange [0.0:2.0]
 
 set xlabel "x"

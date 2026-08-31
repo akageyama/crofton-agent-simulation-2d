@@ -6,8 +6,8 @@ module field_m
   public :: field__get_interpolated_value
   public :: FIELD__A, FIELD__B
 
-  real(DR) <const> :: FIELD__A = 1.0_DR
-  real(DR) <const> :: FIELD__B = 0.5_DR
+  real(DR) <const> :: FIELD__A = 0.5_DR
+  real(DR) <const> :: FIELD__B = 0.25_DR
 
 contains
 
