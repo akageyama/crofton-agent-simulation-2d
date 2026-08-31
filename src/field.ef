@@ -8,13 +8,13 @@ module field_m
 
   ! real(DR) <const> :: FIELD__A = 0.5_DR
   ! real(DR) <const> :: FIELD__B = 0.25_DR
-  real(DR) <const> :: FIELD__A = 0.5_DR
-  real(DR) <const> :: FIELD__B = 0.5_DR
+  real(DR) <const> :: FIELD__A = 0.4_DR
+  real(DR) <const> :: FIELD__B = 0.2_DR
 
 contains
 
 
-  function field__get_interpolated_value( x, timespan_center ) result(value)
+  function field__get_interpolated_value0( x, timespan_center ) result(value)
     real(DR) <in> :: x, timespan_center
     real(DR) :: value
 
@@ -24,6 +24,36 @@ contains
 
     xsq = x*x
     t_minus_tc = Timekeeper.t - timespan_center
+    t_minus_tc_sq = t_minus_tc * t_minus_tc
+
+    !!>
+         field(x,t) = x^2 /A^2 + (t-t_c)^2 / B^2 -1
+    !!<
+
+    value = xsq / ASQ + t_minus_tc_sq / BSQ - 1.0_DR
+  end function field__get_interpolated_value0
+
+
+  function field__get_interpolated_value( x, timespan_center ) result(value)
+    real(DR) <in> :: x, timespan_center
+    real(DR) :: value
+
+    real(DR) :: xp, xsq, t_minus_tc, t_minus_tc_sq
+    real(DR) <const> :: ASQ = FIELD__A*FIELD__A
+    real(DR) <const> :: BSQ = FIELD__B*FIELD__B
+
+    if ( Timekeeper.t < timespan_center ) then
+      t_minus_tc = Timekeeper.t - timespan_center + timespan_center / 2
+      xsq = x*x
+    else
+      t_minus_tc = Timekeeper.t - timespan_center - timespan_center / 2
+      if ( x >=0.0_DR ) then
+        xp = x - timespan_center / 2
+      else
+        xp = (-x) - timespan_center / 2 ! mirror
+      end if
+      xsq = xp*xp
+    end if
     t_minus_tc_sq = t_minus_tc * t_minus_tc
 
     !!>

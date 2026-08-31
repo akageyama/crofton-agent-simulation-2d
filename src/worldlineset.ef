@@ -22,8 +22,8 @@ module worldlineset_m
 
   real(DR) <const> :: WORLDLINESET__DIST_MAX = WORLDLINESET__TIME_SPAN_END    &
                                              - WORLDLINESET__TIME_SPAN_CENTER
-  integer  <const> :: NDIV_DIST  = 10
-  integer  <const> :: NDIV_ANGLE = 10
+  integer  <const> :: NDIV_DIST  = 100
+  integer  <const> :: NDIV_ANGLE = 100
   integer  <const> :: WORLDLINESET_NLINES = NDIV_DIST * NDIV_ANGLE
 
   type(worldline_t), dimension(WORLDLINESET_NLINES) :: Worldlineset
@@ -110,7 +110,8 @@ contains
     !!<
     theoretical_value = perimeter_of_a_ellipse( FIELD__A, FIELD__B )
     call ut__message( "perimeter_of_the_field=", perimeter_of_the_field )
-    call ut__message( "     theoretical value=", theoretical_value )
+    ! call ut__message( "     theoretical value=", theoretical_value )
+    call ut__message( "     theoretical value=", theoretical_value*2 )
   end subroutine worldlineset__summary
 
 
