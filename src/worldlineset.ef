@@ -1,15 +1,29 @@
 module worldlineset_m
   use constants_m
   use worldline_m
+  use field_m
+  use ut_m
   implicit none
+  private
   public :: Worldlineset
+  public :: worldlineset__initialize
+  public :: worldlineset__summary
+  public :: worldlineset__update
+  public :: WORLDLINESET__TIME_SPAN_BEGIN
+  public :: WORLDLINESET__TIME_SPAN_END
+  public :: WORLDLINESET__TIME_SPAN_CENTER
+  public :: WORLDLINESET__DIST_MAX
 
-  real(DR) <const> :: TIME_SPAN_BEGIN = 0.0_DR
-  real(DR) <const> :: TIME_SPAN_END   = 2.0_DR
-  real(DR) <const> :: TIME_SPAN_CENTER = ( TIME_SPAN_BEGIN + TIME_SPAN_END ) / 2
-  real(DR) <const> :: DIST_MAX = 2.0_DR
-  integer  <const> :: NDIV_DIST  = 10
-  integer  <const> :: NDIV_ANGLE = 10
+  real(DR) <const> :: WORLDLINESET__TIME_SPAN_BEGIN = 0.0_DR
+  real(DR) <const> :: WORLDLINESET__TIME_SPAN_END   = 2.0_DR
+  real(DR) <const> :: WORLDLINESET__TIME_SPAN_CENTER            &
+                         = ( WORLDLINESET__TIME_SPAN_BEGIN      &
+                           + WORLDLINESET__TIME_SPAN_END ) / 2
+
+  real(DR) <const> :: WORLDLINESET__DIST_MAX = WORLDLINESET__TIME_SPAN_END    &
+                                             - WORLDLINESET__TIME_SPAN_CENTER
+  integer  <const> :: NDIV_DIST  = 1000
+  integer  <const> :: NDIV_ANGLE = 1000
   integer  <const> :: WORLDLINESET_NLINES = NDIV_DIST * NDIV_ANGLE
 
   type(worldline_t), dimension(WORLDLINESET_NLINES) :: Worldlineset
@@ -19,22 +33,28 @@ contains
 
   subroutine worldlineset__initialize
     integer  :: i, j, counter
-    real(DR) :: phi0 = PI/3
+    real(DR) :: phi0 = 0
     real(DR) :: dist, phi
     real(DR) :: d_phi  = TWOPI / NDIV_ANGLE
-    real(DR) :: d_dist = DIST_MAX / NDIV_DIST
+    real(DR) :: d_dist = WORLDLINESET__DIST_MAX / NDIV_DIST
 
     !!>
          For NDIV_DIST = 4
-                   .<--------------- dist = DIST_MAX
-                  * i=4
-                 .
-                * i=3
-               .
-              * i=2
+           
+          .
              .
-            * i=1
-           +<--------------- dist = 0
+                w
+                   o<--------------- dist = WORLDLINESET__DIST_MAX
+              i=4 *   r
+                 .       l
+            i=3 *           d
+               .               l
+          i=2 *  \                i
+             .  angle                n
+        i=1 *    /                      e
+           +<--------------- dist = 0      .
+                                              .    
+                                                 .
     !!<
 
     counter = 1
@@ -42,11 +62,47 @@ contains
       phi = phi0 + d_phi*(j-1)
       do i = 1, NDIV_DIST
         dist = d_dist*(i-0.5_DR)
-        !debugp counter, phi, dist
-        call Worldlineset(counter).initialize( phi, dist, TIME_SPAN_CENTER )
+        call Worldlineset(counter).initialize( phi, dist, WORLDLINESET__TIME_SPAN_CENTER )
         counter += 1
       end do
     end do
   end subroutine worldlineset__initialize
+
+
+  subroutine worldlineset__update
+    integer :: l
+    do l = 1, WORLDLINESET_NLINES
+      call worldlineset(l).update()
+    end do
+  end subroutine worldlineset__update
+
+
+  subroutine worldlineset__summary
+    integer :: l
+    integer :: sum
+    real(DR) :: ratio
+    real(DR) :: perimeter_of_the_field
+    real(DR) :: perimeter_of_external_circle
+    real(DR) :: theoretical_value
+    real(DR) :: h
+    sum = 0
+    do l = 1, WORLDLINESET_NLINES
+      sum += Worldlineset(l).sensor.counter
+    end do
+    perimeter_of_external_circle = TWOPI*WORLDLINESET__DIST_MAX
+    ratio = real(sum,DR) / (2*WORLDLINESET_NLINES)
+    perimeter_of_the_field = ratio * perimeter_of_external_circle
+
+    !!> 
+        Perimeter of an ellise.
+        https://en.wikipedia.org/wiki/Perimeter_of_an_ellipse
+    !!<
+    h = (FIELD__A-FIELD__B)**2 / (FIELD__A+FIELD__B)**2
+    theoretical_value  &
+      = PI*(FIELD__A+FIELD__B)*(1+3*h/(10+sqrt(4-3*h)))
+    call ut__message( "perimeter_of_the_field=", perimeter_of_the_field )
+    call ut__message( "     theoretical value=", theoretical_value )
+  end subroutine worldlineset__summary
+
 
 end module worldlineset_m

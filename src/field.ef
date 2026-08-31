@@ -4,7 +4,10 @@ module field_m
   implicit none
   private
   public :: field__get_interpolated_value
+  public :: FIELD__A, FIELD__B
 
+  real(DR) <const> :: FIELD__A = 1.0_DR
+  real(DR) <const> :: FIELD__B = 0.5_DR
 
 contains
 
@@ -14,10 +17,8 @@ contains
     real(DR) :: value
 
     real(DR) :: xsq, t_minus_tc, t_minus_tc_sq
-    real(DR) <const> :: A = 0.8_DR
-    real(DR) <const> :: ASQ = A*A
-    real(DR) <const> :: B = 0.2_DR
-    real(DR) <const> :: BSQ = B*B
+    real(DR) <const> :: ASQ = FIELD__A*FIELD__A
+    real(DR) <const> :: BSQ = FIELD__B*FIELD__B
 
     xsq = x*x
     t_minus_tc = Timekeeper.t - timespan_center

@@ -1,27 +1,32 @@
 program main
   use clock_m
   use constants_m
-  use timekeeper_m
   use field_m
+  use timekeeper_m
+  use ut_m
   use worldline_m
   use worldlineset_m
-  use ut_m
   implicit none
 
-  integer :: loop_max = 10000
+  integer :: nstep = 0
+  integer :: nstep_max = 10000
 
                                           !{main  }{{STT}}
   call Timekeeper.initialize              !{main  }{time i}
   call worldlineset__initialize           !{main  }{wlns s}
-  call iPrint                             !{main  }{iprint}
+!-call iPrint                             !{main  }{iprint}
 
-! do loop = 1, loop_max                   !{{count}}
-!   call croftons.update                  !{main  }{mhd up}
-! end do
+  do while ( Timekeeper.t < WORLDLINESET__TIME_SPAN_END )
+    nstep += 1                            !{{count}}
+    call Timekeeper.update                !{main  }{time u}
+!-  call Timekeeper.print_time            !{main  }{time p}
+    call worldlineset__update             !{main  }{mhd up}
+  end do
 
-  call iPrint                             !{main  }{iprint}
+  call worldlineset__summary
+!-call iPrint                             !{main  }{iprint}
                                           !{main  }{{END}}
-                                          !{{print}}
+!-                                        !{{print}}
 
 contains
 

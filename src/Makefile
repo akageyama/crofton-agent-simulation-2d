@@ -31,12 +31,11 @@ $(info ** Setting variables for Mac)
 EFPP = ../bin/efpp.py
 FC = gfortran 
 FFLAGS = 
-# FFLAGS = -fopenmp
-FFLAGS += -fcheck=all
-FFLAGS += -Wall
-FFLAGS += -fbounds-check
-FFLAGS += -fcheck-array-temporaries
-FFLAGS += -ffpe-trap=invalid,zero,overflow
+     # FFLAGS += -fcheck=all <== This causes mysterious error on my Mac.
+#FFLAGS += -Wall
+#FFLAGS += -fbounds-check
+#FFLAGS += -fcheck-array-temporaries
+#FFLAGS += -ffpe-trap=invalid,zero,overflow
 
 #-----------<Print out macros>--------------
 ifeq ($(MAKE_RESTARTS),)
