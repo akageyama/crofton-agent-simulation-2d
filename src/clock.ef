@@ -24,8 +24,6 @@
 
 module clock_m
   use constants_m
-  use mpi
-  use parallel_m
   implicit none
   private
 
@@ -348,9 +346,7 @@ contains
 
 
   subroutine clock__print
-    if ( Parallel.rank.me == 0 ) then
-      call printer
-    end if
+    call printer
   end subroutine clock__print
 
 end module clock_m

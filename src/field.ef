@@ -10,13 +10,14 @@ contains
 
 
   function field__get_interpolated_value( x, timespan_center ) result(value)
-    real(DR) <in> :: x
+    real(DR) <in> :: x, timespan_center
+    real(DR) :: value
 
     real(DR) :: xsq, t_minus_tc, t_minus_tc_sq
-    real(DR) <param> :: A = 0.8_DR
-    real(DR) <param> :: ASQ = A*A
-    real(DR) <param> :: B = 0.2_DR
-    real(DR) <param> :: BSQ = B*B
+    real(DR) <const> :: A = 0.8_DR
+    real(DR) <const> :: ASQ = A*A
+    real(DR) <const> :: B = 0.2_DR
+    real(DR) <const> :: BSQ = B*B
 
     xsq = x*x
     t_minus_tc = Timekeeper.t - timespan_center

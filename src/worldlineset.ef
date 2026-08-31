@@ -4,13 +4,13 @@ module worldlineset_m
   implicit none
   public :: Worldlineset
 
-  real(DR) :: TIME_SPAN_BEGIN = 0.0_DR
-  real(DR) :: TIME_SPAN_END   = 2.0_DR
-  real(DR) :: TIME_SPAN_CENTER = ( TIME_SPAN_BEGIN + TIME_SPAN_END ) / 2
-  real(DR) :: DIST_MAX = 2.0_DR
-  integer <const> :: NDIV_DIST  = 10
-  integer <const> :: NDIV_ANGLE = 10
-  integer <const> :: WORLDLINESET_NLINES = NDIV_DIST * NDIV_ANGLE
+  real(DR) <const> :: TIME_SPAN_BEGIN = 0.0_DR
+  real(DR) <const> :: TIME_SPAN_END   = 2.0_DR
+  real(DR) <const> :: TIME_SPAN_CENTER = ( TIME_SPAN_BEGIN + TIME_SPAN_END ) / 2
+  real(DR) <const> :: DIST_MAX = 2.0_DR
+  integer  <const> :: NDIV_DIST  = 10
+  integer  <const> :: NDIV_ANGLE = 10
+  integer  <const> :: WORLDLINESET_NLINES = NDIV_DIST * NDIV_ANGLE
 
   type(worldline_t), dimension(WORLDLINESET_NLINES) :: Worldlineset
 
@@ -20,6 +20,7 @@ contains
   subroutine worldlineset__initialize
     integer  :: i, j, counter
     real(DR) :: phi0 = PI/3
+    real(DR) :: dist, phi
     real(DR) :: d_phi  = TWOPI / NDIV_ANGLE
     real(DR) :: d_dist = DIST_MAX / NDIV_DIST
 

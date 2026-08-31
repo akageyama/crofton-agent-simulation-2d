@@ -33,7 +33,6 @@ contains
       call constants__print
       in_the_beginning = .false.
     else ! in the end of the simulation
-      call ut__deco_message( '#', trim(Job.last_message) )
       call ut__message_leader( "Job ends on", ut__date_and_time() )
     end if
   end subroutine iPrint

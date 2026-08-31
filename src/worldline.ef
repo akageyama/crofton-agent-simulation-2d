@@ -21,7 +21,6 @@ module worldline_m
     real(DR) :: cos_phi, cos_phi_reciprocal
     real(DR) :: sin_phi
     real(DR) :: tan_phi
-    real(DR) :: timespan_center
     real(DR) :: x_0, v_x
     logical :: alive
     type(worldline_sensor_t) :: sensor
@@ -128,11 +127,7 @@ contains
     class(worldline_t) <out> :: worldline
     real(DR) <in> :: phi, dist, timespan_center
     
-    real(DR) <param> :: TINY = 1.e-6_DR
-
-    real(DR) :: sin_phi
-    real(DR) :: cos_phi, cos_phi_reciprocal
-    real(DR) :: tan_phi
+    real(DR) <const> :: TINY = 1.e-6_DR
 
     call worldline.sensor.initialize
 
@@ -143,11 +138,11 @@ contains
     worldline.cos_phi = cos(phi)
     worldline.sin_phi = sin(phi)
 
-    if ( abs(cos_phi)) >= TINY ) then
+    if ( abs(worldline.cos_phi) >= TINY ) then
       worldline.tan_phi = tan(phi)
       worldline.cos_phi_reciprocal = 1.0_DR / cos(phi)
       worldline.v_x = -tan(phi)
-      worldline.x_0 = dist / cos_phi
+      worldline.x_0 = dist / worldline.cos_phi
       worldline.alive = .true.
     else
       worldline.alive = .false.
