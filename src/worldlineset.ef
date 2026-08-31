@@ -96,6 +96,8 @@ contains
     real(DR) :: perimeter_of_the_field
     real(DR) :: perimeter_of_external_circle
     real(DR) :: theoretical_value
+    integer :: number_of_peaks = 3
+
     sum = 0
     do l = 1, WORLDLINESET_NLINES
       sum += Worldlineset(l).sensor.counter
@@ -108,10 +110,10 @@ contains
         Perimeter of an ellise.
         https://en.wikipedia.org/wiki/Perimeter_of_an_ellipse
     !!<
-    theoretical_value = perimeter_of_a_ellipse( FIELD__A, FIELD__B )
+    
+    theoretical_value = number_of_peaks * perimeter_of_a_ellipse( FIELD__A, FIELD__B )
     call ut__message( "perimeter_of_the_field=", perimeter_of_the_field )
-    ! call ut__message( "     theoretical value=", theoretical_value )
-    call ut__message( "     theoretical value=", theoretical_value*2 )
+    call ut__message( "     theoretical value=", theoretical_value )
   end subroutine worldlineset__summary
 
 
