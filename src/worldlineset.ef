@@ -22,8 +22,8 @@ module worldlineset_m
 
   real(DR) <const> :: WORLDLINESET__DIST_MAX = WORLDLINESET__TIME_SPAN_END    &
                                              - WORLDLINESET__TIME_SPAN_CENTER
-  integer  <const> :: NDIV_DIST  = 1000
-  integer  <const> :: NDIV_ANGLE = 1000
+  integer  <const> :: NDIV_DIST  = 10
+  integer  <const> :: NDIV_ANGLE = 10
   integer  <const> :: WORLDLINESET_NLINES = NDIV_DIST * NDIV_ANGLE
 
   type(worldline_t), dimension(WORLDLINESET_NLINES) :: Worldlineset
@@ -77,6 +77,18 @@ contains
   end subroutine worldlineset__update
 
 
+  function perimeter_of_a_ellipse( a, b ) result(len)
+    real(DR) <in> :: a, b
+    real(DR) :: len
+
+    real(DR) :: h
+
+    h = (a-b)**2 / (a+b)**2
+
+    len = PI*(a+b)*(1+3*h/(10+sqrt(4-3*h)))
+  end function perimeter_of_a_ellipse
+
+
   subroutine worldlineset__summary
     integer :: l
     integer :: sum
@@ -84,7 +96,6 @@ contains
     real(DR) :: perimeter_of_the_field
     real(DR) :: perimeter_of_external_circle
     real(DR) :: theoretical_value
-    real(DR) :: h
     sum = 0
     do l = 1, WORLDLINESET_NLINES
       sum += Worldlineset(l).sensor.counter
@@ -97,9 +108,7 @@ contains
         Perimeter of an ellise.
         https://en.wikipedia.org/wiki/Perimeter_of_an_ellipse
     !!<
-    h = (FIELD__A-FIELD__B)**2 / (FIELD__A+FIELD__B)**2
-    theoretical_value  &
-      = PI*(FIELD__A+FIELD__B)*(1+3*h/(10+sqrt(4-3*h)))
+    theoretical_value = perimeter_of_a_ellipse( FIELD__A, FIELD__B )
     call ut__message( "perimeter_of_the_field=", perimeter_of_the_field )
     call ut__message( "     theoretical value=", theoretical_value )
   end subroutine worldlineset__summary
