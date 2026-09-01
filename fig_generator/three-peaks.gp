@@ -58,7 +58,7 @@ unset table
 # 負：灰色点線
 plot "positive.dat" w l lc rgb "gray" lw 1.5 dt 1 notitle, \
      "negative.dat" w l lc rgb "gray" lw 1.5 dt 2 notitle, \
-     "zero.dat"     w l lc rgb "blue" lw 2.0 dt 1 notitle
+     "zero.dat"     w l lc rgb "black" lw 2.0 dt 1 notitle
 
 
 pause -1
