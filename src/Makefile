@@ -2,7 +2,6 @@
 # Makefile for tetra-dynamo
 #
 #   Akira Kageyama (kage@port.kobe-u.ac.jp)
-#     2022.07.08: Copied from yyz-relax code.
 #
 
 .SUFFIXES:
@@ -50,18 +49,18 @@ endif
 runme: $(objlist)
 	$(FC) $(FFLAGS) -o runme $(objlist) $(FLIB)
 
-run: runme 
-	./runme
+# 
+# run: runme 
+# 	./runme namelistファイルを引数として渡す
+#
+# 	詳しくは以下を見よ。
+# 	_tools_generate_contour_level_vs_length_by_crofton
 
 -include depend_list.mk
 
 depend_list.mk: *.ef
 	../bin/gendep.sh > $@ 
 
-
-
-line:
-	@echo "="{1..100} | sed 's/[ 0-9]//g' # bash one-liner for a line
 
 
 clean:

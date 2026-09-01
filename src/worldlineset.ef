@@ -2,6 +2,7 @@ module worldlineset_m
   use constants_m
   use worldline_m
   use field_m
+  use input_m
   use ut_m
   implicit none
   private
@@ -80,6 +81,9 @@ contains
   function perimeter_of_a_ellipse( a, b ) result(len)
     real(DR) <in> :: a, b
     real(DR) :: len
+    !!>
+        https://en.wikipedia.org/wiki/Perimeter_of_an_ellipse
+    !!<
 
     real(DR) :: h
 
@@ -96,7 +100,6 @@ contains
     real(DR) :: perimeter_of_the_field
     real(DR) :: perimeter_of_external_circle
     real(DR) :: theoretical_value
-    integer :: number_of_peaks = 3
 
     sum = 0
     do l = 1, WORLDLINESET_NLINES
@@ -107,13 +110,14 @@ contains
     perimeter_of_the_field = ratio * perimeter_of_external_circle
 
     !!> 
-        Perimeter of an ellise.
-        https://en.wikipedia.org/wiki/Perimeter_of_an_ellipse
+        最初のテスト。楕円の周長を計算
+
+        theoretical_value = perimeter_of_a_ellipse( FIELD__A, FIELD__B )
+        call ut__message( "     theoretical value=", theoretical_value )
     !!<
     
-    theoretical_value = number_of_peaks * perimeter_of_a_ellipse( FIELD__A, FIELD__B )
-    call ut__message( "perimeter_of_the_field=", perimeter_of_the_field )
-    call ut__message( "     theoretical value=", theoretical_value )
+
+    print *, "## level,len:", Input.contour_level, perimeter_of_the_field
   end subroutine worldlineset__summary
 
 

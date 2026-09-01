@@ -1,0 +1,62 @@
+L = 0.45
+W = 0.15
+
+# q1(x,t) = (x+t)**2/(2*L**2) \
+#         + (t-x-1)**2/(2*W**2)
+# 
+# q2(x,t) = (x-t+2)**2/(2*L**2) \
+#         + (x+t-1)**2/(2*W**2)
+# 
+# q3(x,t) = (x+t-2)**2/(2*L**2) \
+#         + (t-x-1)**2/(2*W**2)
+
+# peak 1: (-0.45, 0.55)
+q1(x,t) = (x+t-0.45)**2/(2*L**2) \
+        + (t-x-1.00)**2/(2*W**2)
+
+# peak 2: (-0.35, 1.35)
+q2(x,t) = (x-t+1.55)**2/(2*L**2) \
+        + (x+t-1.00)**2/(2*W**2)
+
+# peak 3: ( 0.35, 1.35)
+q3(x,t) = (x+t-1.55)**2/(2*L**2) \
+        + (t-x-1.00)**2/(2*W**2)
+
+f(x,t) = exp(-q1(x,t)) \
+       + exp(-q2(x,t)) \
+       + exp(-q3(x,t))
+
+set xrange [-1:1]
+set yrange [0:2]
+
+set xlabel "x"
+set ylabel "t"
+
+set size ratio -1
+
+set samples 300
+set isosamples 300
+
+set contour base
+unset surface
+set cntrparam levels auto 20
+
+# 等高線をファイルに出力
+set table "contour.dat"
+splot f(x,y)
+unset table
+
+# 2次元グラフとして灰色で描画
+plot "contour.dat" \
+     using 1:2 \
+     with lines \
+     lc rgb "gray" \
+     lw 1.0 \
+     notitle
+
+
+set terminal pngcairo size 800,800
+set output "three-gaussians.png"
+replot
+pause -1
+

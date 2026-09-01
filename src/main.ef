@@ -4,6 +4,7 @@ program main
   use field_m
   use timekeeper_m
   use ut_m
+  use input_m
   use worldline_m
   use worldlineset_m
   implicit none
@@ -12,6 +13,7 @@ program main
   integer :: nstep_max = 10000
 
                                           !{main  }{{STT}}
+  call Input.read                         !{main  }{iput r}
   call Timekeeper.initialize              !{main  }{time i}
   call worldlineset__initialize           !{main  }{wlns s}
 !-call iPrint                             !{main  }{iprint}

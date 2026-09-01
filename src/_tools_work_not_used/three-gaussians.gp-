@@ -1,0 +1,38 @@
+L = 0.45
+W = 0.15
+
+q1(x,t) = (x+t)**2/(2*L**2) \
+        + (t-x-1)**2/(2*W**2)
+
+q2(x,t) = (x-t+2)**2/(2*L**2) \
+        + (x+t-1)**2/(2*W**2)
+
+q3(x,t) = (x+t-2)**2/(2*L**2) \
+        + (t-x-1)**2/(2*W**2)
+
+f(x,t) = exp(-q1(x,t)) \
+       + exp(-q2(x,t)) \
+       + exp(-q3(x,t))
+
+set xrange [-1:1]
+set yrange [0:2]
+
+set xlabel "x"
+set ylabel "t"
+
+set view map
+set size ratio -1
+
+set samples 300
+set isosamples 300
+
+set contour base
+unset surface
+
+set cntrparam levels auto 50
+
+set style line 1 lc rgb "gray" lw 1.0
+
+splot f(x,y) with lines ls 1 notitle
+
+pause -1

@@ -1,0 +1,41 @@
+module input_m
+  use constants_m
+  use ut_m
+  implicit none
+  private
+
+  type, public :: input_t
+    real(DR) :: contour_level
+  contains
+    procedure, nopass :: read => input__read
+  end type input_t
+
+  ! work variabiles 
+  real(SR) :: contour_level_
+
+  type(input_t), public :: Input
+
+  namelist /data00/ contour_level_
+
+
+contains
+
+
+  subroutine input__read
+    char(len=200) :: filename
+    integer :: fileunit
+
+    call getarg(1, filename)
+    call ut__message_leader( 'input', filename )
+
+    open(newunit=fileunit, file=trim(filename), form='formatted')
+      read(fileunit,nml=data00)
+    close(fileunit)
+
+    input.contour_level = contour_level_
+
+    call ut__message_leader( 'contour_level',  &
+                        input.contour_level )
+  end subroutine input__read
+
+end module input_m

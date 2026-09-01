@@ -1,8 +1,5 @@
 reset
 
-#L = 0.40
-#W = 0.12
-
 L = 0.60
 W = 0.20
 
@@ -39,7 +36,17 @@ set table "contour.dat"
 splot f(x,y)
 unset table
 
+# f = 0.48 の等高線だけを別に生成
+set cntrparam levels discrete 0.50
+
+set table "contour_050.dat"
+splot f(x,y)
+unset table
+
+# 灰色の等高線の上に f=0.50 を青太線で重ねる
 plot "contour.dat" using 1:2 \
-     with lines lc rgb "#aaaaaa" lw 1.0 notitle
+     with lines lc rgb "#aaaaaa" lw 1.0 notitle, \
+     "contour_050.dat" using 1:2 \
+     with lines lc rgb "blue" lw 3.0 notitle
 
 pause -1

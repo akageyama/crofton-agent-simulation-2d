@@ -3,18 +3,17 @@ module field_m
   use timekeeper_m
   implicit none
   private
-  public :: field__get_interpolated_value
+  public :: field__an_ellipse
+  public :: field__double_peak_in_2d_time_posx_space
   public :: FIELD__A, FIELD__B
 
-  ! real(DR) <const> :: FIELD__A = 0.5_DR
-  ! real(DR) <const> :: FIELD__B = 0.25_DR
-  real(DR) <const> :: FIELD__A = 0.4_DR
+  real(DR) <const> :: FIELD__A = 0.6_DR
   real(DR) <const> :: FIELD__B = 0.2_DR
 
 contains
 
 
-  function field__get_interpolated_value0( x, timespan_center ) result(value)
+  function field__an_ellipse( x, timespan_center ) result(value)
     real(DR) <in> :: x, timespan_center
     real(DR) :: value
 
@@ -31,10 +30,10 @@ contains
     !!<
 
     value = xsq / ASQ + t_minus_tc_sq / BSQ - 1.0_DR
-  end function field__get_interpolated_value0
+  end function field__an_ellipse
 
 
-  function field__get_interpolated_value( x, timespan_center ) result(value)
+  function field__two_ellipse_used_to_test( x, timespan_center ) result(value)
     real(DR) <in> :: x, timespan_center
     real(DR) :: value
 
@@ -61,7 +60,62 @@ contains
     !!<
 
     value = xsq / ASQ + t_minus_tc_sq / BSQ - 1.0_DR
-  end function field__get_interpolated_value
+  end function field__two_ellipse_used_to_test
+
+
+  function field__double_peak_in_2d_time_posx_space( x, level ) result(value)
+    real(DR) <in> :: x, level
+    real(SR) :: value
+
+    !!>
+        Here I assume timespan_center = 1
+    !!<
+
+    !!>
+        以下は 
+        _tools_generate_theoretical_contour_lines/two_peaks.gp 
+        の冒頭部分
+
+        この関数をそのまま再現している。
+
+          A = 0.60
+          B = 0.20
+          ASQ = A*A
+          BSQ = B*B
+          
+          # peak 1: (-0.5, 0.5)
+          q1(x,t) = (x+t)**2/(2*ASQ) \
+                  + (t-x-1.0)**2/(2*BSQ)
+          
+          # peak 2: (0.5, 1.5)
+          q2(x,t) = (x+t-2.0)**2/(2*ASQ) \
+                  + (t-x-1.0)**2/(2*BSQ)
+          
+          f1(x,t) = exp(-q1(x,t))
+          f2(x,t) = exp(-q2(x,t))
+          
+          f(x,t) = f1(x,t) + f2(x,t)
+          
+          set xrange [-1:1]
+          set yrange [0:2]
+          
+          set xlabel "x"
+          set ylabel "time"
+    !!<
+
+    real(DR) :: xp, xsq, t_minus_tc, t_minus_tc_sq
+    real(DR) <const> :: ASQ = FIELD__A*FIELD__A
+    real(DR) <const> :: BSQ = FIELD__B*FIELD__B
+
+    real(DR) :: t, q1, q2
+
+    t = Timekeeper.t
+
+    q1 = (x+t)**2/(2*ASQ) + (t-x-1.0_DR)**2/(2*BSQ)
+    q2 = (x+t-2.0_DR)**2/(2*ASQ) + (t-x-1.0_DR)**2/(2*BSQ)
+
+    value = exp(-q1) + exp(-q2) - level
+  end function field__double_peak_in_2d_time_posx_space
 
 end module field_m
 

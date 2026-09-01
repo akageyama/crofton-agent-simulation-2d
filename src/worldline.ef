@@ -2,6 +2,7 @@ module worldline_m
   use constants_m
   use timekeeper_m
   use field_m
+  use input_m
   implicit none
   private
 
@@ -72,7 +73,11 @@ contains
 
     if ( pos_x >= SIMULATION_REGION.xmin .and. &
          pos_x <= SIMULATION_REGION.xmax ) then
-      value = field__get_interpolated_value( pos_x, worldline.timespan_center )
+      !
+      ! 一つの楕円でのテスト
+      ! value = field__an_ellipse( pos_x, worldline.timespan_center )
+
+      value = field__double_peak_in_2d_time_posx_space( pos_x, level=Input.contour_level )
       call worldline.sensor.update( value )
     end if
   end subroutine worldline__update
